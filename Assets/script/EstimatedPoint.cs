@@ -9,13 +9,46 @@ public class EstimatedPoint : MonoBehaviour
     public RawImage image;
     public float whitePoint;
     public int numCut;
+    public int windowMagnification;
+    public float weightRate;
     private int __width;
     private int __height;
+    private float avePixel = 9881f;
+    private float[] weightArray;
+    private int window = 224;
+    private int windowSize;
     // Start is called before the first frame update
     void Start()
     {
         if (numCut < 2)
             Debug.LogError("numCut is too small");
+        windowSize = window * windowMagnification;
+        weightArray = new float[numCut * numCut + 1];
+        int center = numCut / 2;
+        for (int i = 0; i < numCut; i++)
+        {
+            for (int j = 0; j < numCut; j++)
+            {
+                //weightArray[i*numCut + j] = i <= center ? 2.0f - weightRate * (float)i : 2.0f - weightRate * ((float)numCut - (float)i);
+                if ((Mathf.Min(i, j) == 0) || Mathf.Max(i, j) == 7)
+                {
+                    weightArray[i * numCut + j] = 1 + 3.0f * weightRate;
+                }
+                else if((Mathf.Min(i, j) == 1) || Mathf.Max(i, j) == 6)
+                {
+                    weightArray[i * numCut + j] = 1 + 2.0f * weightRate;
+                }
+                else if ((Mathf.Min(i, j) == 2) || Mathf.Max(i, j) == 5)
+                {
+                    weightArray[i * numCut + j] = 1 + 1.0f * weightRate;
+                }
+                else
+                {
+                    weightArray[i * numCut + j] = 1.0f;
+                }
+                Debug.Log("i:" + i + "\tj:" + j + "\tweight:" + weightArray[i*numCut + j]);
+            }
+        }
     }
 
     // Update is called once per frame
@@ -23,28 +56,124 @@ public class EstimatedPoint : MonoBehaviour
     {
 
         //if (Input.GetMouseButtonDown(0))
+        //{
+        //    List<ArrayPixel> list = new List<ArrayPixel>();
+        //    Texture2D tex2D = image.texture as Texture2D;
+        //    __width = tex2D.width;
+        //    __height = tex2D.height;
+        //    Debug.Log(__width + "\t" + __height);
+        //    for (int i = 1; i < numCut; i++)
+        //    {
+        //        for (int j = 1; j < numCut; j++)
+        //        {
+        //            ArrayPixel ap = new ArrayPixel();
+        //            int _width = tex2D.width * i / numCut;
+        //            int _height = tex2D.height * j / numCut;
+        //            ap.binary = 1-GetBinary(tex2D.GetPixel(_width, _height));
+        //            ap.width = _width;
+        //            ap.height = _height;
+        //            list.Add(ap);
+        //            Debug.Log("\ti:" + _width + "\tj:" + _height + "\tbinary:" + (ap.binary == 0 ? "白" : "黒"));
+        //        }
+        //    }
+        //    CalculateCenterOfGravity(list);
+        //}
+        if (Input.GetMouseButtonDown(0))
         {
-            List<ArrayPixel> list = new List<ArrayPixel>();
-            Texture2D tex2D = image.texture as Texture2D;
-            __width = tex2D.width;
-            __height = tex2D.height;
-            Debug.Log(__width + "\t" + __height);
-            for (int i = 1; i < numCut; i++)
+            StartCoroutine(Estimate());
+        }
+    }
+
+    IEnumerator Estimate()
+    {
+        List<imageData> imageList = new List<imageData>();
+        Texture2D tex2D = image.texture as Texture2D;
+        trustPoint maxtPoint = new trustPoint();
+        maxtPoint.trustPointStore = 2147483647;
+        __width = tex2D.width;
+        __height = tex2D.height;
+        for (int i = 0; i < numCut; i++)        //serch start position
+        {
+            for (int j = 0; j < numCut; j++)    //serch start position
             {
-                for (int j = 1; j < numCut; j++)
+                //start
+                imageData iData = new imageData();
+                int centerX = __width * i / numCut;
+                int centerY = __height * j / numCut;
+
+                IEnumerator coroutine = GetImageCoroutine(centerX, centerY, tex2D,iData);
+                yield return coroutine;
+                iData = (imageData)coroutine.Current;
+                iData.position = new Vector3(centerX - (__width / 2), centerY - (__height / 2), 0);
+                imageList.Add(iData);
+                //Debug.Log(Reliability(i, j, iData.sumBlackPixel));
+                if (maxtPoint.trustPointStore > Reliability(i, j, iData.sumBlackPixel))
                 {
-                    ArrayPixel ap = new ArrayPixel();
-                    int _width = tex2D.width * i / numCut;
-                    int _height = tex2D.height * j / numCut;
-                    ap.binary = GetBinary(tex2D.GetPixel(_width, _height));
-                    ap.width = _width;
-                    ap.height = _height;
-                    list.Add(ap);
-                    Debug.Log("\ti:" + _width + "\tj:" + _height + "\tbinary:" + (ap.binary == 0 ? "白" : "黒"));
+                    Debug.Log("\ti:" + i + "\tj:" + j);
+                    maxtPoint.trustPointStore = Reliability(i, j, iData.sumBlackPixel);
+                    Debug.Log(maxtPoint.trustPointStore);
+                    maxtPoint.width = centerX;
+                    maxtPoint.height = centerY;
+                    this.transform.localPosition = iData.position;
                 }
             }
-            CalculateCenterOfGravity(list);
         }
+    }
+    IEnumerator GetImageCoroutine(int centerX, int centerY, Texture2D tex2D, imageData ap)
+    {
+        ap.imagePixel= new byte[window * window];
+        ap.sumBlackPixel = 0;
+        int num = 0;
+        for (int k = centerX - windowSize / 2; k < centerX + windowSize / 2; k += windowMagnification)
+        {
+            for (int l = centerY - windowSize / 2; l < centerY + windowSize / 2; l += windowMagnification)
+            {
+                if (k < 0 | l < 0 | __width < k | __height < l)
+                {
+                    ap.imagePixel[num] = 1;
+                }
+                else
+                {
+                    ap.imagePixel[num] = (byte)GetBinary(tex2D.GetPixel(k, l));
+                    //Debug.Log(ap.imagePixel[num]);
+                }
+                ap.sumBlackPixel += 1 - ap.imagePixel[num++];
+            }
+        }
+        Debug.Log(ap.sumBlackPixel+"\tx;"+centerX+"\ty:"+centerY);
+        yield return ap;
+    }
+    private float Reliability(int i,int j,int sumBlackPixel)
+    {
+        return (Mathf.Abs(sumBlackPixel - avePixel)) * weightArray[i*numCut + j];
+    }
+    private imageData GetImageData(int centerX,int centerY,Texture2D tex2D,imageData ap)
+    {
+        Debug.Log(tex2D.GetPixel(centerX, centerY));
+        StartCoroutine(GetImageCoroutine(centerX, centerY, tex2D, ap));
+        //for文の中に入っていない？
+        //for (int k = centerX - windowSize / 2; k < centerX + windowSize/2; k += windowMagnification)
+        //{
+        //    Debug.Log("hogee");
+        //    for (int l = centerY - windowSize / 2; l < centerY + windowSize/2; l += windowMagnification)
+        //    {
+        //        Debug.Log("hooge");
+        //        if (k < 0 | l < 0 | __width < k | __height < l)
+        //        {
+        //            ap.imagePixel[num] = 1;
+        //            Debug.Log("hoge");
+        //        }
+        //        else
+        //        {
+        //            ap.imagePixel[num] = (byte)GetBinary(tex2D.GetPixel(k, l));
+        //            Debug.Log(ap.imagePixel[num]);
+        //            Debug.Log("hogehoge");
+        //        }
+        //        ap.sumBlackPixel += 1 -ap.imagePixel[num++];
+        //    }
+        //}
+        //Debug.Log(ap.sumBlackPixel);
+        return ap;
     }
     /// <summary>
     /// 対象のpixelのcolorを渡して2値化した画素を取得
@@ -55,7 +184,7 @@ public class EstimatedPoint : MonoBehaviour
     {
         float h, s, v;
         Color.RGBToHSV(color, out h, out s, out v);
-        return s < whitePoint ? 0 : 1;
+        return s < whitePoint ? 1 : 0;
     }
     /// <summary>
     /// 重心の計算を行う
@@ -80,14 +209,87 @@ public class EstimatedPoint : MonoBehaviour
         this.transform.localPosition = new Vector3(-((x / sumX) - (__width / 2)),-( (y / sumY) - (__height / 2)), 0f);
         //this.transform.localPosition = new Vector3(-((x / sum) - (__width / 2)), -((y / sum) - (__height / 2)), 0f);
     }
-    private int WeightFunction(int binary)
-    {
-
-        return 2*binary;
-    }
     private float WeightFunction(float binary,float judgePointPos,float size)
     {
         return binary * System.Math.Abs(size - 2 * judgePointPos) ;
+    }
+}
+class trustPoint
+{
+    private int _width;
+    private int _height;
+    private float _trustPoint;
+    public int width
+    {
+        get
+        {
+            return this._width;
+        }
+        set
+        {
+            _width= value;
+        }
+    }
+    public int height
+    {
+        get
+        {
+            return this._height;
+        }
+        set
+        {
+            _height = value;
+        }
+    }
+    public float trustPointStore
+    {
+        get
+        {
+            return this._trustPoint;
+        }
+        set
+        {
+            _trustPoint = value;
+        }
+    }
+}
+class imageData
+{
+    private int _sumBlackPixel;
+    private Vector3 _position;
+    private byte[] _imagePixel;
+    public int sumBlackPixel
+    {
+        get
+        {
+            return this._sumBlackPixel;
+        }
+        set
+        {
+            _sumBlackPixel = value;
+        }
+    }
+    public Vector3 position
+    {
+        get
+        {
+            return this._position;
+        }
+        set
+        {
+            _position = value;
+        }
+    }
+    public byte[] imagePixel
+    {
+        get
+        {
+            return this._imagePixel;
+        }
+        set
+        {
+            _imagePixel = value;
+        }
     }
 }
 class ArrayPixel
