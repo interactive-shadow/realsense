@@ -12,6 +12,7 @@ public class EstimatedPoint : MonoBehaviour
     public int windowMagnification;
     public float weightRate;
     public GameObject haveSendImageMethodObject;
+    public float depthRenge;
     private int __width;
     private int __height;
     private float avePixel = 9881f;
@@ -52,13 +53,26 @@ public class EstimatedPoint : MonoBehaviour
             }
         }
         script = haveSendImageMethodObject.GetComponent<SocketManager>();
+
+        StartCoroutine(EstimateRepeat());
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        //if ()
         {
+            //StartCoroutine(Estimate());
+            //StartCoroutine(EstimateRepeat());
+
+        }
+    }
+
+    IEnumerator EstimateRepeat()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(15f);
             StartCoroutine(Estimate());
         }
     }
@@ -84,7 +98,7 @@ public class EstimatedPoint : MonoBehaviour
                 IEnumerator coroutine = GetImageCoroutine(centerX, centerY, tex2D,iData);
                 yield return coroutine;
                 iData = (imageData)coroutine.Current;
-                iData.position = new Vector3(centerX - (__width / 2), -(centerY - (__height / 2)), 0);
+                iData.position = new Vector3((centerX - (__width / 2)) * 3f, -(centerY - (__height / 2)) * 3f, 0);
                 imageList.Add(iData);
                 //Debug.Log(Reliability(i, j, iData.sumBlackPixel));
                 if (maxtPoint.trustPointStore > Reliability(i, j, iData.sumBlackPixel))
@@ -137,7 +151,7 @@ public class EstimatedPoint : MonoBehaviour
             for(int y = iData.image.height-1; 0 <= y; y--)
             {
                 Color color = iData.imagePixel[x*window+y] == (byte)0 ? Color.black : Color.white;
-                iData.image.SetPixel(x, y, color);
+                iData.image.SetPixel(x, iData.image.height - y - 1, color);
             }
         }
         iData.image.Apply();
@@ -155,9 +169,12 @@ public class EstimatedPoint : MonoBehaviour
     /// <returns></returns>
     private int GetBinary(Color color)
     {
-        float h, s, v;
-        Color.RGBToHSV(color, out h, out s, out v);
-        return s < whitePoint ? 1 : 0;
+        //float h, s, v;
+        //Color.RGBToHSV(color, out h, out s, out v);
+        //return s < whitePoint ? 1 : 0;
+
+        float value = color.r * 0xFFFF * 0.001f;
+        return value > depthRenge ? 1 : 0;
     }
 
     /// <summary>
