@@ -7,6 +7,8 @@ using WebSocketSharp;
 using UniRx;
 using UnityEditor.Experimental.UIElements;
 
+using System.IO;
+
 public class SocketManager : MonoBehaviour
 {
     [SerializeField] private string _serverAddress = "localhost";
@@ -15,6 +17,8 @@ public class SocketManager : MonoBehaviour
     [SerializeField] private int maxSendLen = 2000;
 
     [SerializeField] private Generator generator;
+    
+    [SerializeField] private string path;
     
     private SyncPhase _nowPhase;
     
@@ -118,6 +122,13 @@ public class SocketManager : MonoBehaviour
         //generator.generateAnimal(num);
 
 
+    }
+
+    public void SendImage(Texture2D img)
+    {
+        var png = img.EncodeToPNG();
+        File.WriteAllBytes( path, png );
+        ws.Send(path);
     }
 
 }
