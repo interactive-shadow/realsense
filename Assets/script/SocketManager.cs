@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 using WebSocketSharp;
 using UniRx;
@@ -10,6 +11,8 @@ public class SocketManager : MonoBehaviour
 {
     [SerializeField] private string _serverAddress = "localhost";
     [SerializeField] private int _port = 8080;
+
+    [SerializeField] private int maxSendLen = 2000;
 
     [SerializeField] private Generator generator;
     
@@ -33,7 +36,8 @@ public class SocketManager : MonoBehaviour
         //Add Events
         //On catch message event
         ws.OnMessage += (object sender, MessageEventArgs e) => {
-            print(e.Data);
+            //print("OnMessage");
+            //print(e.Data);
             //print(e.Data.GetType());
             OnGetMessage(e.Data);
         };
@@ -56,14 +60,37 @@ public class SocketManager : MonoBehaviour
 
     void OnApplicationQuit()
     {
+        Debug.Log("やめます");
         ws.Close();
     }
 
     public void SendImage(byte[] image)
     {
+        for(int i = 0; i < image.Length; i++)
+        {
+            image[i] = image[i] == (byte)0 ? (byte)'0' : (byte)'1';
+        }
+
         if (_nowPhase == SyncPhase.Syncing) {
-            Debug.Log("Send:" + image.Length + ":" + Time.realtimeSinceStartup);
-            ws.Send(image);
+            //Debug.Log("Send:" + image.Length + ":" + Time.realtimeSinceStartup);
+            //ws.Send(image);
+
+            int imageLen = image.Length;
+            int index = 0;
+            while((index + 1) * maxSendLen < imageLen)
+            {
+                byte[] sendData = new byte[maxSendLen];
+                Array.Copy(image, index * maxSendLen, sendData, 0, maxSendLen);
+                Debug.Log("send:" + sendData.Length);
+                //sendData[0] = (byte)index.ToString()[0];
+                ws.Send(sendData);
+                index++;
+            }
+            int tmpLen = imageLen - index * maxSendLen;
+            byte[] sd = new byte[tmpLen];
+            Array.Copy(image, index * maxSendLen, sd, 0, tmpLen);
+            Debug.Log("send:" + sd.Length);
+            ws.Send(sd);
         }
     }
 
@@ -73,11 +100,24 @@ public class SocketManager : MonoBehaviour
         int result;
         if (int.TryParse(message, out result))
         {
-            generator.generateAnimal(result);
+            Debug.Log("Message Get:" + result);
+            //generator.generateAnimal(result);
+            test(result);
         }
         else
         {
-            Debug.Log("messageがintにparseできません。");
+            Debug.Log(message);
+            //Debug.Log("messageがintにparseできません。");
         }
     }
+
+    void test(int num)
+    {
+        Debug.Log("test:" + num);
+        generator.testes(num);
+        //generator.generateAnimal(num);
+
+
+    }
+
 }
