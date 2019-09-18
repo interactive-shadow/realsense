@@ -67,7 +67,8 @@ public class PositionSync : MonoBehaviour {
     public void OnChangedTargetTransformValue(Vector3 pos) {
         if (_nowPhase == SyncPhase.Syncing) {
             Debug.Log(pos);
-            ws.Send(pos.ToString());
+            //ws.Send(pos.ToString());
+            ws.Send(new byte[] { (byte)1, (byte)5, (byte)6 });
         }
     }
 }
