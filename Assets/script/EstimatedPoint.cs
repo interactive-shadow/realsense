@@ -11,12 +11,14 @@ public class EstimatedPoint : MonoBehaviour
     public int numCut;
     public int windowMagnification;
     public float weightRate;
+    public GameObject haveSendImageMethodObject;
     private int __width;
     private int __height;
     private float avePixel = 9881f;
     private float[] weightArray;
     private int window = 224;
     private int windowSize;
+    private SocketManager script;
     // Start is called before the first frame update
     void Start()
     {
@@ -49,6 +51,7 @@ public class EstimatedPoint : MonoBehaviour
                 Debug.Log("i:" + i + "\tj:" + j + "\tweight:" + weightArray[i*numCut + j]);
             }
         }
+        script = haveSendImageMethodObject.GetComponent<SocketManager>();
     }
 
     // Update is called once per frame
@@ -119,7 +122,7 @@ public class EstimatedPoint : MonoBehaviour
                     n_thNum = i * numCut + j;
                 }
             }
-            sendImage(imageList[n_thNum].imagePixel);
+            script.SendImage(imageList[n_thNum].imagePixel);
         }
     }
     IEnumerator GetImageCoroutine(int centerX, int centerY, Texture2D tex2D, imageData ap)
