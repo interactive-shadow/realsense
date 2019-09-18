@@ -84,7 +84,7 @@ public class EstimatedPoint : MonoBehaviour
                 IEnumerator coroutine = GetImageCoroutine(centerX, centerY, tex2D,iData);
                 yield return coroutine;
                 iData = (imageData)coroutine.Current;
-                iData.position = new Vector3(centerX - (__width / 2), centerY - (__height / 2), 0);
+                iData.position = new Vector3(centerX - (__width / 2), -(centerY - (__height / 2)), 0);
                 imageList.Add(iData);
                 //Debug.Log(Reliability(i, j, iData.sumBlackPixel));
                 if (maxtPoint.trustPointStore > Reliability(i, j, iData.sumBlackPixel))
@@ -134,7 +134,7 @@ public class EstimatedPoint : MonoBehaviour
         iData.image = new Texture2D(window, window);
         for(int x = 0; x < iData.image.width; x++)
         {
-            for(int y = 0; y < iData.image.height; y++)
+            for(int y = iData.image.height-1; 0 <= y; y--)
             {
                 Color color = iData.imagePixel[x*window+y] == (byte)0 ? Color.black : Color.white;
                 iData.image.SetPixel(x, y, color);
