@@ -802,7 +802,7 @@ MonoBehaviour:
   windowMagnification: 2
   weightRate: 0.1
   haveSendImageMethodObject: {fileID: 1047407188}
-  depthRenge: 0.3
+  depthRenge: 0.7
 --- !u!114 &1358098209
 MonoBehaviour:
   m_ObjectHideFlags: 0
