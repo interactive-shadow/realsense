@@ -57,30 +57,6 @@ public class EstimatedPoint : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        //if (Input.GetMouseButtonDown(0))
-        //{
-        //    List<ArrayPixel> list = new List<ArrayPixel>();
-        //    Texture2D tex2D = image.texture as Texture2D;
-        //    __width = tex2D.width;
-        //    __height = tex2D.height;
-        //    Debug.Log(__width + "\t" + __height);
-        //    for (int i = 1; i < numCut; i++)
-        //    {
-        //        for (int j = 1; j < numCut; j++)
-        //        {
-        //            ArrayPixel ap = new ArrayPixel();
-        //            int _width = tex2D.width * i / numCut;
-        //            int _height = tex2D.height * j / numCut;
-        //            ap.binary = 1-GetBinary(tex2D.GetPixel(_width, _height));
-        //            ap.width = _width;
-        //            ap.height = _height;
-        //            list.Add(ap);
-        //            Debug.Log("\ti:" + _width + "\tj:" + _height + "\tbinary:" + (ap.binary == 0 ? "白" : "黒"));
-        //        }
-        //    }
-        //    CalculateCenterOfGravity(list);
-        //}
         if (Input.GetMouseButtonDown(0))
         {
             StartCoroutine(Estimate());
@@ -122,9 +98,10 @@ public class EstimatedPoint : MonoBehaviour
                     n_thNum = i * numCut + j;
                 }
             }
-            script.SendImage(imageList[n_thNum].imagePixel);
+            script.SendImage(SetImage(imageList[n_thNum]));
         }
     }
+
     IEnumerator GetImageCoroutine(int centerX, int centerY, Texture2D tex2D, imageData ap)
     {
         ap.imagePixel= new byte[window * window];
@@ -149,38 +126,25 @@ public class EstimatedPoint : MonoBehaviour
         Debug.Log(ap.sumBlackPixel+"\tx;"+centerX+"\ty:"+centerY);
         yield return ap;
     }
+    private Texture2D SetImage(imageData iData)
+    {
+        iData.image = new Texture2D(window, window);
+        for(int x = 0; x < iData.image.width; x++)
+        {
+            for(int y = 0; y < iData.image.height; y++)
+            {
+                Color color = iData.imagePixel[x*window+y] == (byte)0 ? Color.black : Color.white;
+                iData.image.SetPixel(x, y, color);
+            }
+        }
+        iData.image.Apply();
+        return iData.image;
+    }
     private float Reliability(int i,int j,int sumBlackPixel)
     {
         return (Mathf.Abs(sumBlackPixel - avePixel)) * weightArray[i*numCut + j];
     }
-    private imageData GetImageData(int centerX,int centerY,Texture2D tex2D,imageData ap)
-    {
-        Debug.Log(tex2D.GetPixel(centerX, centerY));
-        StartCoroutine(GetImageCoroutine(centerX, centerY, tex2D, ap));
-        //for文の中に入っていない？
-        //for (int k = centerX - windowSize / 2; k < centerX + windowSize/2; k += windowMagnification)
-        //{
-        //    Debug.Log("hogee");
-        //    for (int l = centerY - windowSize / 2; l < centerY + windowSize/2; l += windowMagnification)
-        //    {
-        //        Debug.Log("hooge");
-        //        if (k < 0 | l < 0 | __width < k | __height < l)
-        //        {
-        //            ap.imagePixel[num] = 1;
-        //            Debug.Log("hoge");
-        //        }
-        //        else
-        //        {
-        //            ap.imagePixel[num] = (byte)GetBinary(tex2D.GetPixel(k, l));
-        //            Debug.Log(ap.imagePixel[num]);
-        //            Debug.Log("hogehoge");
-        //        }
-        //        ap.sumBlackPixel += 1 -ap.imagePixel[num++];
-        //    }
-        //}
-        //Debug.Log(ap.sumBlackPixel);
-        return ap;
-    }
+
     /// <summary>
     /// 対象のpixelのcolorを渡して2値化した画素を取得
     /// </summary>
@@ -192,6 +156,7 @@ public class EstimatedPoint : MonoBehaviour
         Color.RGBToHSV(color, out h, out s, out v);
         return s < whitePoint ? 1 : 0;
     }
+
     /// <summary>
     /// 重心の計算を行う
     /// </summary>
@@ -264,6 +229,7 @@ class imageData
     private int _sumBlackPixel;
     private Vector3 _position;
     private byte[] _imagePixel;
+    private Texture2D _image;
     public int sumBlackPixel
     {
         get
@@ -295,6 +261,17 @@ class imageData
         set
         {
             _imagePixel = value;
+        }
+    }
+    public Texture2D image
+    {
+        get
+        {
+            return this._image;
+        }
+        set
+        {
+            _image = value;
         }
     }
 }
