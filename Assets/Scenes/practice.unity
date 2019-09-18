@@ -213,7 +213,9 @@ MonoBehaviour:
   prefab6: {fileID: 1430061632814182, guid: 1642cf8fb575d406b9e751b67126b5d0, type: 3}
   prefab7: {fileID: 1642336952533778, guid: 8d161b6c9f67243a1918b8ef83e569e1, type: 3}
   prefab8: {fileID: 1813845222868586, guid: 29f8f446a0e954d5ebe5836c3b5cc9c4, type: 3}
+  testObject: {fileID: 0}
   n: 5
+  posImage: {fileID: 0}
 --- !u!4 &125540767
 Transform:
   m_ObjectHideFlags: 0
@@ -436,6 +438,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a82fd9986fb3ca40881ca40dea34bb8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _serverAddress: localhost
+  _port: 8080
+  maxSendLen: 2000
+  generator: {fileID: 0}
 --- !u!4 &1047407190
 Transform:
   m_ObjectHideFlags: 0
@@ -786,7 +792,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   image: {fileID: 1042812084}
-  whitePoint: 0.23
+  whitePoint: 0.22
   numCut: 15
 --- !u!114 &1358098209
 MonoBehaviour:
