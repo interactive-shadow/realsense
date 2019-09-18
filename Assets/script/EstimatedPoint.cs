@@ -90,6 +90,7 @@ public class EstimatedPoint : MonoBehaviour
         Texture2D tex2D = image.texture as Texture2D;
         trustPoint maxtPoint = new trustPoint();
         maxtPoint.trustPointStore = 2147483647;
+        int n_thNum = 0;
         __width = tex2D.width;
         __height = tex2D.height;
         for (int i = 0; i < numCut; i++)        //serch start position
@@ -115,8 +116,10 @@ public class EstimatedPoint : MonoBehaviour
                     maxtPoint.width = centerX;
                     maxtPoint.height = centerY;
                     this.transform.localPosition = iData.position;
+                    n_thNum = i * numCut + j;
                 }
             }
+            sendImage(imageList[n_thNum].imagePixel);
         }
     }
     IEnumerator GetImageCoroutine(int centerX, int centerY, Texture2D tex2D, imageData ap)
