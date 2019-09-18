@@ -128,6 +128,7 @@ public class SocketManager : MonoBehaviour
     {
         var png = img.EncodeToPNG();
         File.WriteAllBytes( path, png );
+        Debug.Log("Send:" + path);
         ws.Send(path);
     }
 

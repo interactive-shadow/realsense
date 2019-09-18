@@ -187,7 +187,7 @@ GameObject:
   - component: {fileID: 125540767}
   - component: {fileID: 125540766}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Generator
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -265,6 +265,9 @@ MonoBehaviour:
   image: {fileID: 1042812084}
   whitePoint: 0.23
   numCut: 15
+  windowMagnification: 0
+  weightRate: 0
+  haveSendImageMethodObject: {fileID: 0}
 --- !u!65 &491327661
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -439,9 +442,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _serverAddress: localhost
-  _port: 8080
+  _port: 9999
   maxSendLen: 2000
-  generator: {fileID: 0}
+  generator: {fileID: 125540766}
+  path: 
 --- !u!4 &1047407190
 Transform:
   m_ObjectHideFlags: 0
@@ -794,6 +798,9 @@ MonoBehaviour:
   image: {fileID: 1042812084}
   whitePoint: 0.22
   numCut: 15
+  windowMagnification: 0
+  weightRate: 0
+  haveSendImageMethodObject: {fileID: 0}
 --- !u!114 &1358098209
 MonoBehaviour:
   m_ObjectHideFlags: 0

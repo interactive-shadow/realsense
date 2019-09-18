@@ -48,7 +48,7 @@ public class EstimatedPoint : MonoBehaviour
                 {
                     weightArray[i * numCut + j] = 1.0f;
                 }
-                Debug.Log("i:" + i + "\tj:" + j + "\tweight:" + weightArray[i*numCut + j]);
+                //Debug.Log("i:" + i + "\tj:" + j + "\tweight:" + weightArray[i*numCut + j]);
             }
         }
         script = haveSendImageMethodObject.GetComponent<SocketManager>();
@@ -89,7 +89,7 @@ public class EstimatedPoint : MonoBehaviour
                 //Debug.Log(Reliability(i, j, iData.sumBlackPixel));
                 if (maxtPoint.trustPointStore > Reliability(i, j, iData.sumBlackPixel))
                 {
-                    Debug.Log("\ti:" + i + "\tj:" + j);
+                    //Debug.Log("\ti:" + i + "\tj:" + j);
                     maxtPoint.trustPointStore = Reliability(i, j, iData.sumBlackPixel);
                     Debug.Log(maxtPoint.trustPointStore);
                     maxtPoint.width = centerX;
@@ -98,8 +98,11 @@ public class EstimatedPoint : MonoBehaviour
                     n_thNum = i * numCut + j;
                 }
             }
-            script.SendImage(SetImage(imageList[n_thNum]));
+            //script.SendImage(SetImage(imageList[n_thNum]));
+            //Debug.Log("Image Create");
         }
+        script.SendImage(SetImage(imageList[n_thNum]));
+        Debug.Log("Image Create");
     }
 
     IEnumerator GetImageCoroutine(int centerX, int centerY, Texture2D tex2D, imageData ap)
@@ -123,7 +126,7 @@ public class EstimatedPoint : MonoBehaviour
                 ap.sumBlackPixel += 1 - ap.imagePixel[num++];
             }
         }
-        Debug.Log(ap.sumBlackPixel+"\tx;"+centerX+"\ty:"+centerY);
+        //Debug.Log(ap.sumBlackPixel+"\tx;"+centerX+"\ty:"+centerY);
         yield return ap;
     }
     private Texture2D SetImage(imageData iData)
